@@ -107,6 +107,25 @@ class InstanceActionPayload(InstancePayload):
 
 
 @nova_base.NovaObjectRegistry.register_notification
+class ExtendedInstanceActionPayload(InstancePayload):
+    VERSION = '1.0'
+    fields = {
+        'fault': fields.ObjectField('ExceptionPayload', nullable=True),
+        'extra_usage_info': fields.DictOfNullableStringsField(nullable=True),
+    }
+
+    def __init__(self, instance, fault, ip_addresses, flavor,
+                 extra_usage_info, **kwargs):
+        super(ExtendedInstanceActionPayload, self).__init__(
+                instance=instance,
+                fault=fault,
+                ip_addresses=ip_addresses,
+                flavor=flavor,
+                extra_usage_info=extra_usage_info,
+                **kwargs)
+
+
+@nova_base.NovaObjectRegistry.register_notification
 class InstanceActionVolumeSwapPayload(InstanceActionPayload):
     # No SCHEMA as all the additional fields are calculated
 
@@ -304,6 +323,7 @@ class InstanceStateUpdatePayload(base.NotificationPayloadBase):
 # @base.notification_sample('instance-unrescue-end.json')
 # @base.notification_sample('instance-unshelve-start.json')
 # @base.notification_sample('instance-unshelve-end.json')
+@base.notification_sample('instance-create-end.json')
 @nova_base.NovaObjectRegistry.register_notification
 class InstanceActionNotification(base.NotificationBase):
     # Version 1.0: Initial version
@@ -335,4 +355,15 @@ class InstanceActionVolumeSwapNotification(base.NotificationBase):
 
     fields = {
         'payload': fields.ObjectField('InstanceActionVolumeSwapPayload')
+    }
+
+
+@base.notification_sample('instance-create-start.json')
+@nova_base.NovaObjectRegistry.register_notification
+class ExtendedInstanceActionNotification(base.NotificationBase):
+    # Version 1.0: Initial version
+    VERSION = '1.0'
+
+    fields = {
+        'payload': fields.ObjectField('ExtendedInstanceActionPayload')
     }

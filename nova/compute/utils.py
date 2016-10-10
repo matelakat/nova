@@ -347,10 +347,12 @@ def notify_about_instance_action(context, instance, host, action, phase=None,
     :param action: the name of the action
     :param phase: the phase of the action
     :param binary: the binary emitting the notification
+    :param kwargs: any additional information
     """
     ips = _get_instance_ips(instance)
 
     flavor = instance_notification.FlavorPayload(instance=instance)
+
     # TODO(gibi): handle fault during the transformation of the first error
     # notifications
     payload = instance_notification.InstanceActionPayload(
@@ -358,7 +360,45 @@ def notify_about_instance_action(context, instance, host, action, phase=None,
             fault=None,
             ip_addresses=ips,
             flavor=flavor)
+
     notification = instance_notification.InstanceActionNotification(
+            context=context,
+            priority=fields.NotificationPriority.INFO,
+            publisher=notification_base.NotificationPublisher(
+                    context=context, host=host, binary=binary),
+            event_type=notification_base.EventType(
+                    object='instance',
+                    action=action,
+                    phase=phase),
+            payload=payload)
+    notification.emit(context)
+
+
+def notify_about_instance_action_extended(context, instance, host, action,
+                                          phase=None, binary='nova-compute',
+                                          extra_usage_info=None):
+    """Send versioned notification about the action made on the instance
+    :param instance: the instance which the action performed on
+    :param host: the host emitting the notification
+    :param action: the name of the action
+    :param phase: the phase of the action
+    :param binary: the binary emitting the notification
+    :param extra_usage_info: any additional usage information
+    """
+    ips = _get_instance_ips(instance)
+
+    flavor = instance_notification.FlavorPayload(instance=instance)
+
+    # TODO(gibi): handle fault during the transformation of the first error
+    # notifications
+    payload = instance_notification.ExtendedInstanceActionPayload(
+        instance=instance,
+        fault=None,
+        ip_addresses=ips,
+        flavor=flavor,
+        extra_usage_info=extra_usage_info)
+
+    notification = instance_notification.ExtendedInstanceActionNotification(
             context=context,
             priority=fields.NotificationPriority.INFO,
             publisher=notification_base.NotificationPublisher(

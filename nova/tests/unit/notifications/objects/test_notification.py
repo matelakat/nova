@@ -262,6 +262,9 @@ notification_object_data = {
     'EventType': '1.4-da0f0fbcda143ca96c2ac1b93937c22c',
     'ExceptionNotification': '1.0-a73147b93b520ff0061865849d3dfa56',
     'ExceptionPayload': '1.0-4516ae282a55fe2fd5c754967ee6248b',
+    'ExtendedInstanceActionNotification':
+    '1.0-a73147b93b520ff0061865849d3dfa56',
+    'ExtendedInstanceActionPayload': '1.0-b5e1c9718095d6afb112fd47c66eac88',
     'FlavorPayload': '1.0-8ad962ab0bafc7270f474c7dda0b7c20',
     'InstanceActionNotification': '1.0-a73147b93b520ff0061865849d3dfa56',
     'InstanceActionPayload': '1.0-d94994d6043bb87fde603976ce811cba',
