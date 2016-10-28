@@ -339,8 +339,8 @@ def _get_instance_ips(instance):
     return ips
 
 
-def notify_about_instance_action(context, instance, host, action, phase=None,
-                                 binary='nova-compute'):
+def _notify_about_instance_action(context, instance, host, action, phase=None,
+                                 binary='nova-compute', **kwargs):
     """Send versioned notification about the action made on the instance
     :param instance: the instance which the action performed on
     :param host: the host emitting the notification
@@ -353,15 +353,24 @@ def notify_about_instance_action(context, instance, host, action, phase=None,
 
     flavor = instance_notification.FlavorPayload(instance=instance)
 
+    payload_cls = instance_notification.InstanceActionPayload
+    notification_cls = instance_notification.InstanceActionNotification
+    if kwargs:
+        payload_cls = instance_notification.ExtendedInstanceActionPayload
+        notification_cls = (
+            instance_notification.ExtendedInstanceActionNotification
+        )
+
     # TODO(gibi): handle fault during the transformation of the first error
     # notifications
-    payload = instance_notification.InstanceActionPayload(
+    payload = payload_cls(
             instance=instance,
             fault=None,
             ip_addresses=ips,
-            flavor=flavor)
+            flavor=flavor,
+            **kwargs)
 
-    notification = instance_notification.InstanceActionNotification(
+    notification = notification_cls(
             context=context,
             priority=fields.NotificationPriority.INFO,
             publisher=notification_base.NotificationPublisher(
@@ -372,43 +381,20 @@ def notify_about_instance_action(context, instance, host, action, phase=None,
                     phase=phase),
             payload=payload)
     notification.emit(context)
+
+
+def notify_about_instance_action(context, instance, host, action, phase=None,
+                                 binary='nova-compute'):
+    return _notify_about_instance_action(context, instance, host, action,
+                                         phase=phase, binary=binary)
 
 
 def notify_about_instance_action_extended(context, instance, host, action,
                                           phase=None, binary='nova-compute',
                                           extra_usage_info=None):
-    """Send versioned notification about the action made on the instance
-    :param instance: the instance which the action performed on
-    :param host: the host emitting the notification
-    :param action: the name of the action
-    :param phase: the phase of the action
-    :param binary: the binary emitting the notification
-    :param extra_usage_info: any additional usage information
-    """
-    ips = _get_instance_ips(instance)
-
-    flavor = instance_notification.FlavorPayload(instance=instance)
-
-    # TODO(gibi): handle fault during the transformation of the first error
-    # notifications
-    payload = instance_notification.ExtendedInstanceActionPayload(
-        instance=instance,
-        fault=None,
-        ip_addresses=ips,
-        flavor=flavor,
-        extra_usage_info=extra_usage_info)
-
-    notification = instance_notification.ExtendedInstanceActionNotification(
-            context=context,
-            priority=fields.NotificationPriority.INFO,
-            publisher=notification_base.NotificationPublisher(
-                    context=context, host=host, binary=binary),
-            event_type=notification_base.EventType(
-                    object='instance',
-                    action=action,
-                    phase=phase),
-            payload=payload)
-    notification.emit(context)
+    return _notify_about_instance_action(context, instance, host, action,
+                                         phase=phase, binary=binary,
+                                         extra_usage_info=extra_usage_info)
 
 
 def notify_about_volume_swap(context, instance, host, action, phase,
